@@ -216,7 +216,7 @@ def set_metric_info(name, unit):
                  https://docs.aws.amazon.com/cli/latest/reference/cloudwatch/put-metric-data.html
     """
     logging.info('Collecting metric {0}'.format(name))
-    metric_table[name] = {'Value': 0.0, 'Data': {'MetricName': name, 'Unit': unit, 'Value': 0.0}}
+    metric_table[name] = {'Value': 0.0, 'Data': {'MetricName': name, 'Unit': unit, 'Value': 0.0, 'StorageResolution': 1}}
 
 
 def initialize_metric_table():
@@ -234,6 +234,7 @@ def initialize_metric_table():
     set_metric_info('NetworkOut', 'Bytes')
     set_metric_info('NetworkPacketsIn', 'Count')
     set_metric_info('NetworkPacketsOut', 'Count')
+    set_metric_info('TruckOnTrack', 'Count')
     # Executing an initial gather of all metrics ensures the values that need to be computed
     # based on previous values will be initialized, and thus valid for subsequent calls
     refresh_metric_table()
@@ -300,12 +301,33 @@ def set_network_metrics():
     set_relative_metric('NetworkPacketsOut', net_io.packets_sent)
 
 
+def set_truck_metrics():
+    """Write truck info into the metric table."""
+    last_line = ""
+    with open(f"/var/log/line-tracking-position-{datetime.datetime.today().strftime('%Y-%m-%d')}.log", 'rb') as f:
+        try:  # catch OSError in case of a one line file 
+            f.seek(-2, os.SEEK_END)
+            while f.read(1) != b'\n':
+                f.seek(-2, os.SEEK_CUR)
+        except OSError:
+            f.seek(0)
+        last_line = f.readline().decode()
+        f.close()
+
+    logging.info(f"last_line is: {last_line}")
+    if "Invalid" in last_line:
+        set_absolute_metric('TruckOnTrack', 0)
+    else:
+        set_absolute_metric('TruckOnTrack', 1)
+
+
 def refresh_metric_table():
     """Write all metrics into the metric table."""
     set_cpu_metrics()
     set_memory_metrics()
     set_disk_metrics()
     set_network_metrics()
+    set_truck_metrics()
 
 
 def push_metric_data():
