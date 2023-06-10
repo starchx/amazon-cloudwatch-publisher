@@ -304,15 +304,19 @@ def set_network_metrics():
 def set_truck_metrics():
     """Write truck info into the metric table."""
     last_line = ""
-    with open(f"/var/log/line-tracking-position-{datetime.datetime.today().strftime('%Y-%m-%d')}.log", 'rb') as f:
-        try:  # catch OSError in case of a one line file 
-            f.seek(-2, os.SEEK_END)
-            while f.read(1) != b'\n':
-                f.seek(-2, os.SEEK_CUR)
-        except OSError:
-            f.seek(0)
-        last_line = f.readline().decode()
-        f.close()
+    try:
+        with open(f"/var/log/line-tracking-position-{datetime.datetime.today().strftime('%Y-%m-%d')}.log", 'rb') as f:
+            try:  # catch OSError in case of a one line file 
+                f.seek(-2, os.SEEK_END)
+                while f.read(1) != b'\n':
+                    f.seek(-2, os.SEEK_CUR)
+            except OSError:
+                f.seek(0)
+            last_line = f.readline().decode()
+            f.close()
+    except:
+        logging.info(f"cannot read last line of /var/log/line-tracking-position-{datetime.datetime.today().strftime('%Y-%m-%d')}.log")
+        set_absolute_metric('TruckOnTrack', 0)
 
     logging.info(f"last_line is: {last_line}")
     if "Invalid" in last_line:
