@@ -69,7 +69,7 @@ MAX_LOGS_COLLECTION_LIST = 50
 SYSTEM_JOURNAL_FLAG = 'system-journal-flag'
 
 # Specify known TCP ports to exclude from monitoring and reporting
-KNOWN_TCP_LISTENING_PORTS = [22, 631, 5900, 8888] # 8888 preserved for iot truck operator control
+KNOWN_TCP_LISTENING_PORTS = [22, 631, 5900, 5555, 8888] # 8888 preserved for iot truck operator control
 
 # Either take the config file path off the command line or use the default location
 try:
