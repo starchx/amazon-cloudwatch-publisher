@@ -69,7 +69,7 @@ MAX_LOGS_COLLECTION_LIST = 50
 SYSTEM_JOURNAL_FLAG = 'system-journal-flag'
 
 # Specify known TCP ports to exclude from monitoring and reporting
-KNOWN_TCP_PORTS_LISTENING = ['22', '631', '5900', '8888'] # 8888 preserved for iot truck operator control
+KNOWN_TCP_LISTENING_PORTS = [22, 631, 5900, 8888] # 8888 preserved for iot truck operator control
 
 # Either take the config file path off the command line or use the default location
 try:
@@ -236,7 +236,7 @@ def initialize_metric_table():
     set_metric_info('NetworkOut', 'Bytes')
     set_metric_info('NetworkPacketsIn', 'Count')
     set_metric_info('NetworkPacketsOut', 'Count')
-    set_metric_info('NetworkTcpPortsListening', 'Count')
+    set_metric_info('UnknownListeningPorts', 'Count')
     set_metric_info('TruckOnTrack', 'Count')
     # Executing an initial gather of all metrics ensures the values that need to be computed
     # based on previous values will be initialized, and thus valid for subsequent calls
@@ -304,12 +304,12 @@ def set_network_metrics():
     set_relative_metric('NetworkPacketsOut', net_io.packets_sent)
     # check for tcp4 only for demo purpose
     net_conns = psutil.net_connections(kind='tcp4')
-    tcp_port_listen_counter = 0
+    unknown_tcp_listening_port_counter = 0
     for nc in net_conns:
         if nc.status == 'LISTEN':
-            if nc.laddr.port not in KNOWN_TCP_PORTS_LISTENING:
-                tcp_port_listen_counter += 1
-    set_absolute_metric('NetworkTcpPortsListening', tcp_port_listen_counter)
+            if nc.laddr.port not in KNOWN_TCP_LISTENING_PORTS:
+                unknown_tcp_listening_port_counter += 1
+    set_absolute_metric('UnknownListeningPorts', unknown_tcp_listening_port_counter)
 
 
 def set_truck_metrics():
