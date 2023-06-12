@@ -68,6 +68,8 @@ MAX_LOGS_COLLECTION_LIST = 50
 # should never match an actual configured file to be followed
 SYSTEM_JOURNAL_FLAG = 'system-journal-flag'
 
+# Specify known TCP ports to exclude from monitoring and reporting
+KNOWN_TCP_PORTS_LISTENING = ['22', '631', '5900', '8888'] # 8888 preserved for iot truck operator control
 
 # Either take the config file path off the command line or use the default location
 try:
@@ -305,7 +307,8 @@ def set_network_metrics():
     tcp_port_listen_counter = 0
     for nc in net_conns:
         if nc.status == 'LISTEN':
-            tcp_port_listen_counter += 1
+            if nc.laddr.port not in KNOWN_TCP_PORTS_LISTENING:
+                tcp_port_listen_counter += 1
     set_absolute_metric('NetworkTcpPortsListening', tcp_port_listen_counter)
 
 
