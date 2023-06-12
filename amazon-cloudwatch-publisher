@@ -234,6 +234,7 @@ def initialize_metric_table():
     set_metric_info('NetworkOut', 'Bytes')
     set_metric_info('NetworkPacketsIn', 'Count')
     set_metric_info('NetworkPacketsOut', 'Count')
+    set_metric_info('NetworkTcpPortsListening', 'Count')
     set_metric_info('TruckOnTrack', 'Count')
     # Executing an initial gather of all metrics ensures the values that need to be computed
     # based on previous values will be initialized, and thus valid for subsequent calls
@@ -299,6 +300,13 @@ def set_network_metrics():
     set_relative_metric('NetworkOut', net_io.bytes_sent)
     set_relative_metric('NetworkPacketsIn', net_io.packets_recv)
     set_relative_metric('NetworkPacketsOut', net_io.packets_sent)
+    # check for tcp4 only for demo purpose
+    net_conns = psutil.net_connections(kind='tcp4')
+    tcp_port_listen_counter = 0
+    for nc in net_conns:
+        if nc.status == 'LISTEN':
+            tcp_port_listen_counter += 1
+    set_absolute_metric('NetworkTcpPortsListening', tcp_port_listen_counter)
 
 
 def set_truck_metrics():
