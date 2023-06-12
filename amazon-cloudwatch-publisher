@@ -334,7 +334,7 @@ def set_truck_metrics():
     last_line_log_time = last_line.split(" ", 1)[0]
     logging.info(f"last log time is: {last_line_log_time}")
     last_line_log_time_in_secs = int(time.mktime(datetime.datetime.strptime(last_line_log_time,  '%Y-%m-%dT%H:%M:%S').timetuple()))
-    print(f"log is over {int(time.time()) - last_line_log_time_in_secs} seconds old.")
+    logging.info(f"log is over {int(time.time()) - last_line_log_time_in_secs} seconds old.")
 
     if int(time.time()) - last_line_log_time_in_secs > 10: # over 10 seconds old
         set_absolute_metric('TruckOnTrack', -1)
@@ -360,8 +360,8 @@ def push_metric_data():
     # Need to turn the table into a list to match the API format
     metric_data = []
     for m in metric_table.values():
-        print(f"m is {m}")
         if m['Data']['MetricName'] == "TruckOnTrack" and m['Data']['Value'] == -1: # ignore this
+            logging.info(f"skipping m coz it is {m}")
             continue
         metric_data.append(m['Data'])
     logging.debug('Putting metric data: {0}'.format(metric_data))
