@@ -327,11 +327,17 @@ def set_truck_metrics():
             f.close()
     except:
         logging.info(f"cannot read last line of /var/log/line-tracking-position-{datetime.datetime.today().strftime('%Y-%m-%d')}.log")
-        set_absolute_metric('TruckOnTrack', 0)
+        set_absolute_metric('TruckOnTrack', -1)
         return
 
     logging.info(f"last_line is: {last_line}")
-    if "Invalid" in last_line:
+    last_line_log_time = last_line.split(" ", 1)[0]
+    logging.info(f"last log time is: {last_line_log_time}")
+    last_line_log_time_in_secs = int(time.mktime(datetime.datetime.strptime(last_line_log_time,  '%Y-%m-%dT%H:%M:%S').timetuple()))
+
+    if int(time.time()) - last_line_log_time_in_secs > 10: # over 10 seconds old
+        set_absolute_metric('TruckOnTrack', -1)
+    elif "Invalid" in last_line:
         set_absolute_metric('TruckOnTrack', 0)
     else:
         set_absolute_metric('TruckOnTrack', 1)
@@ -351,7 +357,11 @@ def push_metric_data():
     cloudwatch = client_session.client('cloudwatch')
     namespace = config['metrics'].get('namespace', DEFAULT_NAMESPACE)
     # Need to turn the table into a list to match the API format
-    metric_data = [m['Data'] for m in metric_table.values()]
+    metric_data = []
+    for m in metric_table.values():
+        if m['Data']['MetricName'] == "TruckOnTrack" and m['Data']['Value'] == '-1': # ignore this
+            continue
+        metric_data.append(m['Data'])
     logging.debug('Putting metric data: {0}'.format(metric_data))
     response = cloudwatch.put_metric_data(Namespace=namespace, MetricData=metric_data)
     logging.debug('Put metric data response: {0}'.format(response))
